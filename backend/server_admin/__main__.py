@@ -1,6 +1,7 @@
 import tornado.ioloop
 import tornado.web
 import rsa
+from yaml import load
 
 from db.repository import Repository
 from server_admin.main import WordsHandler, UrlsHandler
@@ -12,7 +13,9 @@ with open('private.pem', 'rb') as private:
     private_key = rsa.PrivateKey.load_pkcs1(private.read())
 with open('salt', 'rb') as file:
     salt = file.read()
-repository = Repository(public_key, 'mysql+mysqlconnector://root:password@localhost/dict', salt, private_key)
+with open('settings.yml') as file:
+    settings = load(file)
+repository = Repository(public_key, settings.get('dbUrl'), salt, private_key)
 
 
 def make_app():

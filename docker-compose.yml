@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:8
+    restart: always
+    networks:
+      - database-network
+    ports:
+      - "3306:3306"
+    volumes:
+      - $MYSQL_DIR:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: dict
+
+  python_backend:
+    image: dict-python
+    restart: always
+    networks:
+      - database-network
+      - nginx-network
+      - public # because of web scrapping, should be one way (from contantainer to internet)
+    links:
+      - python_backend_admin:python_backend_admin
+    ports:
+      - "8888:8888"
+
+  python_backend_admin:
+    image: dict-python-admin
+    restart: always
+    networks:
+      - database-network
+      - nginx-network
+    links:
+      - db:db
+    ports:
+      - "8889:8889"
+
+  nginx:
+    image: dict-nginx
+    restart: always
+    networks:
+      - nginx-network
+      - public
+    links:
+      - python_backend_admin:python_backend_admin
+      - python_backend:python_backend
+    ports:
+      - "$PORT:80"
+
+
+networks:
+  database-network:
+    internal: true
+  nginx-network:
+    internal: true
+  public:
+    internal: false

@@ -16,7 +16,7 @@ with open('settings.yml') as file:
     settings = load(file)
 witai_settings = settings.get('witai', {})
 witai = Witai(witai_settings.get('entity'), witai_settings.get('token'))
-repository = Repository(public_key, 'mysql+mysqlconnector://root:password@localhost/dict', salt)
+repository = Repository(public_key, settings.get('dbUrl'), salt)
 
 
 def make_app():
