@@ -23,16 +23,20 @@ export default (state = initialState, action) => {
       };
     case ORDER_CHANGED: {
       if (words === null) return state;
-      const words = state.words.clone();
+      const words = state.words.slice(0);
       switch (action.order) {
         case WORD_ASC:
           words.sort((a, b) => a.word.localeCompare(b.word));
+          break;
         case WORD_DESC:
           words.sort((a, b) => b.word.localeCompare(a.word));
+          break;
         case OCCURRENCES_ASC:
           words.sort((a, b) => a.occurrences - b.occurrences);
+          break;
         case OCCURRENCES_DESC:
           words.sort((a, b) => b.occurrences - a.occurrences);
+          break;
       }
       return {
         ...state,
