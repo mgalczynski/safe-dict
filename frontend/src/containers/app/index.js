@@ -1,7 +1,7 @@
-import React from 'react'
-import { Route, Link } from 'react-router-dom'
-import Home from '../home'
-import Admin from '../admin'
+import React from 'react';
+import { Route, Link } from 'react-router-dom';
+import Home from '../home';
+import Admin from '../admin';
 
 const App = () => (
   <div>
@@ -15,6 +15,6 @@ const App = () => (
       <Route exact path="/admin" component={Admin} />
     </main>
   </div>
-)
+);
 
-export default App
+export default App;
