@@ -27,6 +27,7 @@ class UrlsHandler(tornado.web.RequestHandler):
 
     async def get(self):
         self.finish({'result': [{
+            'created': str(u.created),
             'url': u.url,
             'hashOfUrl': b64encode(u.hash_of_url).decode(),
             'analysis': u.analysis.name.capitalize(),

@@ -1,4 +1,5 @@
 export const WORDS_LOADED = 'admin/WORDS_LOADED';
+export const URLS_LOADED = 'admin/URLS_LOADED';
 export const ORDER_CHANGED = 'admin/ORDER_CHANGED';
 export const ERROR_RECEIVED = 'admin/ERROR_RECEIVED';
 export const WORD_ASC = 'WORD_ASC';
@@ -9,7 +10,8 @@ export const OCCURRENCES_DESC = 'OCCURRENCES_DESC';
 const initialState = {
   words: null,
   order: null,
-  error: null
+  error: null,
+  urls: null
 };
 
 export default (state = initialState, action) => {
@@ -22,7 +24,7 @@ export default (state = initialState, action) => {
         error: null
       };
     case ORDER_CHANGED: {
-      if (words === null) return state;
+      if (state.words === null) return state;
       const words = state.words.slice(0);
       switch (action.order) {
         case WORD_ASC:
@@ -36,6 +38,8 @@ export default (state = initialState, action) => {
           break;
         case OCCURRENCES_DESC:
           words.sort((a, b) => b.occurrences - a.occurrences);
+          break;
+        default:
           break;
       }
       return {
@@ -53,6 +57,12 @@ export default (state = initialState, action) => {
         error: { code: action.code, reason: action.reason }
       };
 
+    case URLS_LOADED:
+      return {
+        ...state,
+        urls: action.urls
+      };
+
     default:
       return state;
   }
@@ -64,8 +74,8 @@ export const changeOrder = order => {
   };
 };
 
-export const loadWords = () => {
-  return dispatch =>
+export const loadData = () => {
+  return dispatch => {
     fetch('/adminApi/getWords')
       .then(response => {
         if (!response.ok) throw response;
@@ -84,4 +94,13 @@ export const loadWords = () => {
           reason: error.statusText
         })
       );
+    fetch('/adminApi/getUrls')
+      .then(response => response.json())
+      .then(response =>
+        dispatch({
+          type: URLS_LOADED,
+          urls: response.result
+        })
+      );
+  };
 };
