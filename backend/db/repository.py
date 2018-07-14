@@ -44,7 +44,6 @@ class Repository:
             session.rollback()
             raise
 
-
     @run_on_executor
     def get_all_words(self):
         if self.private_key is None:
@@ -53,7 +52,9 @@ class Repository:
         session = self.Session()
 
         try:
-            return [DecryptedWord(rsa.decrypt(w.encrypted_word, self.private_key), w.occurrences)
-                    for w in session.Query(Word).all()]
+            return [DecryptedWord(rsa.decrypt(w.encrypted_word, self.private_key).decode(), w.occurrences)
+                    for w in session.query(Word).all()]
         except rsa.DecryptionError:
-            return 500, 'Problem with primary key'
+            return 500, 'Internal error'
+        except UnicodeDecodeError:
+            return 500, 'Internal error'

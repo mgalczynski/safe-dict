@@ -11,8 +11,7 @@ class MainHandler(tornado.web.RequestHandler):
     def initialize(self, repository):
         self.repository = repository
 
-    async def get(self):
-
+    async def post(self):
         try:
             body = json_decode(self.request.body)
         except JSONDecodeError:
@@ -43,4 +42,4 @@ class MainHandler(tornado.web.RequestHandler):
         most_frequent = [(w, f / most_frequent_occurrences) for w, f in most_frequent]
 
         self.finish(dict(most_frequent))
-        self.repository.save(url, result)
+        await self.repository.save(url, result)
