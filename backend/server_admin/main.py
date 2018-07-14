@@ -16,4 +16,4 @@ class MainAdminHandler(tornado.web.RequestHandler):
                                      'occurrences': word.occurrences,
                                      'created': str(word.created),
                                      'lastModified': str(word.last_modified)}
-                                    for word in result]})
+                                    for word in sorted(result, key=lambda r: -r.occurrences)]})
