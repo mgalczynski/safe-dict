@@ -3,3 +3,4 @@
 backend/*.pem
 **/.swp
 backend/salt
+backend/settings.yml
