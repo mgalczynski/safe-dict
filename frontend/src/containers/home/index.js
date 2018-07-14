@@ -4,14 +4,14 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogActions from '@material-ui/core/DialogActions';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
+import Checkbox from '@material-ui/core/Checkbox';
 import { withStyles } from '@material-ui/core/styles';
 import { push } from 'connected-react-router';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import { changeUrl, sendRequest } from '../../modules/home';
+import { changeUrl, sendRequest, changeOnlyTopWords } from '../../modules/home';
 
 const styles = theme => ({
   root: {
@@ -40,19 +40,35 @@ const Home = props => (
     {props.lastUrl && (
       <div style={{ textAlign: 'center' }}>
         <div>Cloud for: {props.lastUrl}</div>
-        {props.wordCloud
-          ? props.wordCloud.map(i => (
-              <span
-                key={i[0]}
-                style={{
-                  fontSize: i[1] * 90 + 10,
-                  wordSpacing: 25,
-                  verticalAlign: 'middle'
-                }}>
-                {i[0] + ' '}
-              </span>
-            ))
-          : 'Cloud is empty :('}
+        <FormControlLabel
+          label="Display only top 100 words"
+          control={
+            <Checkbox
+              checked={props.onlyTopWords}
+              onChange={props.changeOnlyTopWords}
+              value="onlyTopWords"
+            />
+          }
+        />
+        <div>
+          {props.wordCloud !== null
+            ? props.wordCloud
+                .filter(i => !props.onlyTopWords || i.isInTop100)
+                .map(i => (
+                  <span
+                    key={i.word}
+                    style={{
+                      fontSize: i.size * 90 + 10,
+                      wordSpacing: 25,
+                      verticalAlign: 'middle',
+                      color:
+                        i.isInTop100 && !props.onlyTopWords ? 'red' : 'black'
+                    }}>
+                    {i.word + ' '}
+                  </span>
+                ))
+            : 'Cloud is empty :('}
+        </div>
       </div>
     )}
   </div>
@@ -66,7 +82,8 @@ const mapDispatchToProps = dispatch =>
   bindActionCreators(
     {
       changeUrl,
-      sendRequest
+      sendRequest,
+      changeOnlyTopWords
     },
     dispatch
   );

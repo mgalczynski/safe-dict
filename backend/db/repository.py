@@ -1,6 +1,7 @@
 from collections import namedtuple
-from secrets import token_bytes
+from operator import itemgetter
 from hashlib import sha3_512
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
 import rsa
@@ -8,13 +9,20 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from tornado.concurrent import run_on_executor
 
-from db.models import Page, Word, Base
+from db.models import Word, Base
 
-DecryptedWord = namedtuple('DecryptedWord', ('word', 'occurrences'))
+DecryptedWord = namedtuple('DecryptedWord', ('word', 'occurrences', 'created', 'last_modified'))
 
 
 class Repository:
-    def __init__(self, public_key, db_url, private_key=None):
+    SALT_SIZE = 32
+
+    # we have same salt for every word that has one advantage: we can look without knowledge of private key
+    # and one disadvantage: it easier to have collision
+    def __init__(self, public_key, db_url, salt, private_key=None):
+        if len(salt) != self.SALT_SIZE:
+            raise RuntimeError('Not correct salt size')
+        self.salt = salt
         self.executor = ThreadPoolExecutor(10)
         self.public_key = public_key
         self.private_key = private_key
@@ -28,16 +36,12 @@ class Repository:
         # we need to do something with sessions, we should be sure that is one session per request (some di)
         session = self.Session()
         try:
-            page = Page(url=url)
-            session.add(page)
-            session.flush()
-            for word, occurrences in results.items():
-                salt = token_bytes(16)
-                hash_of_word = sha3_512(url.encode() + salt + word.encode()).digest()
+            for word, occurrences in sorted(results.items(), key=itemgetter(1), reverse=True):
+                hash_of_word = sha3_512(self.salt + word.encode()).digest()
                 encrypted_word = rsa.encrypt(word.encode(), self.public_key)
-                session.add(
-                    Word(page_id=page.id, salt=salt, word=hash_of_word, encrypted_word=encrypted_word,
-                         occurrences=occurrences))
+                # last_modified is needed when rest of property is same as in db
+                session.merge(Word(word=hash_of_word, encrypted_word=encrypted_word, occurrences=occurrences,
+                                   last_modified=datetime.utcnow()))
 
             session.commit()
         except:
@@ -52,7 +56,10 @@ class Repository:
         session = self.Session()
 
         try:
-            return [DecryptedWord(rsa.decrypt(w.encrypted_word, self.private_key).decode(), w.occurrences)
+            return [DecryptedWord(rsa.decrypt(w.encrypted_word, self.private_key).decode(),
+                                  w.occurrences,
+                                  w.created,
+                                  w.last_modified)
                     for w in session.query(Word).all()]
         except rsa.DecryptionError:
             return 500, 'Internal error'

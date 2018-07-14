@@ -8,7 +8,9 @@ from server.main import MainHandler
 # should be replaced with any conf system
 with open('public.pem', 'rb') as public:
     public_key = rsa.PublicKey.load_pkcs1_openssl_pem(public.read())
-repository = Repository(public_key, 'mysql+mysqlconnector://root:password@localhost/dict')
+with open('salt', 'rb') as file:
+    salt = file.read()
+repository = Repository(public_key, 'mysql+mysqlconnector://root:password@localhost/dict', salt)
 
 
 def make_app():

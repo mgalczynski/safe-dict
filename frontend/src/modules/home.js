@@ -1,11 +1,13 @@
 export const WORD_CLOUD_RECEIVED = 'home/WORD_CLOUD_RECEIVED';
 export const CHANGE_URL = 'home/CHANGE_URL';
+export const CHANGE_ONLY_TOP_WORDS = 'home/CHANGE_ONLY_TOP_WORDS';
 export const ERROR_RECEIVED = 'home/ERROR_RECEIVED';
 
 const initialState = {
   url: 'en.wikipedia.org/wiki/Somerset_Levels',
   lastUrl: null,
   wordCloud: null,
+  onlyTopWords: false,
   error: null
 };
 
@@ -17,8 +19,8 @@ export default (state = initialState, action) => {
         url: action.url
       };
     case WORD_CLOUD_RECEIVED: {
-      const wordCloud = Object.entries(action.wordCloud);
-      wordCloud.sort();
+      const wordCloud = action.wordCloud;
+      wordCloud.sort((a, b) => a.word.localeCompare(b.word));
       return {
         ...state,
         lastUrl: action.url,
@@ -35,6 +37,11 @@ export default (state = initialState, action) => {
         wordCloud: null,
         error: { code: action.code, reason: action.reason }
       };
+    case CHANGE_ONLY_TOP_WORDS:
+      return {
+        ...state,
+        onlyTopWords: !state.onlyTopWords
+      };
 
     default:
       return state;
@@ -47,6 +54,12 @@ export const changeUrl = url => {
       type: CHANGE_URL,
       url: url
     });
+  };
+};
+
+export const changeOnlyTopWords = () => {
+  return dispatch => {
+    dispatch({ type: CHANGE_ONLY_TOP_WORDS });
   };
 };
 
@@ -64,7 +77,7 @@ export const sendRequest = () => {
       .then(response =>
         dispatch({
           type: WORD_CLOUD_RECEIVED,
-          wordCloud: response,
+          wordCloud: response.result,
           url: state.home.url
         })
       )

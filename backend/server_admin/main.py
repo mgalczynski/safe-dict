@@ -12,4 +12,8 @@ class MainAdminHandler(tornado.web.RequestHandler):
             self.set_status(*result)
             self.finish()
         else:
-            self.finish({'result': [{'word': word.word, 'occurrences': word.occurrences} for word in result]})
+            self.finish({'result': [{'word': word.word,
+                                     'occurrences': word.occurrences,
+                                     'created': str(word.created),
+                                     'lastModified': str(word.last_modified)}
+                                    for word in result]})

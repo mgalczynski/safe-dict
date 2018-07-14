@@ -10,7 +10,9 @@ with open('public.pem', 'rb') as public:
     public_key = rsa.PublicKey.load_pkcs1_openssl_pem(public.read())
 with open('private.pem', 'rb') as private:
     private_key = rsa.PrivateKey.load_pkcs1(private.read())
-repository = Repository(public_key, 'mysql+mysqlconnector://root:password@localhost/dict', private_key)
+with open('salt', 'rb') as file:
+    salt = file.read()
+repository = Repository(public_key, 'mysql+mysqlconnector://root:password@localhost/dict', salt, private_key)
 
 
 def make_app():

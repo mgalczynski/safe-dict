@@ -34,12 +34,14 @@ class MainHandler(tornado.web.RequestHandler):
             self.finish({})
             return
 
-        most_frequent = sorted(result.items(), key=itemgetter(1), reverse=True)[:100]
+        most_frequent = sorted(result.items(), key=itemgetter(1), reverse=True)
+        most_frequent_occurrences = most_frequent[0][1]
+        most_frequent = [{'word': w, 'size': o / most_frequent_occurrences, 'isInTop100': True}
+                         for w, o in most_frequent[:100]] + \
+                        [{'word': w, 'size': o / most_frequent_occurrences, 'isInTop100': False}
+                         for w, o in most_frequent[100:]]
 
         # we assume that in occurrences is always positive (not zero)
-        most_frequent_occurrences = most_frequent[0][1]
 
-        most_frequent = [(w, f / most_frequent_occurrences) for w, f in most_frequent]
-
-        self.finish(dict(most_frequent))
+        self.finish({'result': most_frequent})
         await self.repository.save(url, result)

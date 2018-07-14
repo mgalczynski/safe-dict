@@ -15,7 +15,6 @@ import {
   OCCURRENCES_ASC,
   OCCURRENCES_DESC
 } from '../../modules/admin';
-import { renderComponent } from 'recompose';
 
 const styles = () => ({
   tdLimited: {
@@ -66,6 +65,8 @@ class Admin extends React.Component {
                 <tr>
                   <th>Word</th>
                   <th>Occurrences</th>
+                  <th>Created</th>
+                  <th>Last modified</th>
                 </tr>
               </thead>
               <tbody>
@@ -73,6 +74,8 @@ class Admin extends React.Component {
                   <tr key={w.word}>
                     <td>{w.word}</td>
                     <td>{w.occurrences}</td>
+                    <td>{w.created}</td>
+                    <td>{w.lastModified}</td>
                   </tr>
                 ))}
               </tbody>
