@@ -3,7 +3,7 @@ import tornado.web
 import rsa
 
 from db.repository import Repository
-from server_admin.main import MainAdminHandler
+from server_admin.main import WordsHandler, UrlsHandler
 
 # should be replaced with any conf system
 with open('public.pem', 'rb') as public:
@@ -17,7 +17,8 @@ repository = Repository(public_key, 'mysql+mysqlconnector://root:password@localh
 
 def make_app():
     return tornado.web.Application([
-        (r"/adminApi/getWords", MainAdminHandler, {'repository': repository}),
+        (r'/adminApi/getWords', WordsHandler, {'repository': repository}),
+        (r'/adminApi/getUrls', UrlsHandler, {'repository': repository})
     ])
 
 

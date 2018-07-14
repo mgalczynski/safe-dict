@@ -1,5 +1,6 @@
 from collections import namedtuple
 from operator import itemgetter
+from secrets import token_bytes
 from hashlib import sha3_512
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -9,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from tornado.concurrent import run_on_executor
 
-from db.models import Word, Base
+from db.models import Word, Base, Url
 
 DecryptedWord = namedtuple('DecryptedWord', ('word', 'occurrences', 'created', 'last_modified'))
 
@@ -32,10 +33,14 @@ class Repository:
         Base.metadata.create_all(engine)
 
     @run_on_executor
-    def save(self, url, results):
-        # we need to do something with sessions, we should be sure that is one session per request (some di)
+    def save(self, url, results, analysis):
         session = self.Session()
         try:
+            salt = token_bytes(Url.SALT_SIZE)
+            hash_of_url = sha3_512(salt + url.encode()).digest()
+            session.add(
+                Url(salt=salt, hash_of_url=hash_of_url, url=url, analysis=analysis.analysis,
+                    confidence=analysis.confidence))
             for word, occurrences in sorted(results.items(), key=itemgetter(1), reverse=True):
                 hash_of_word = sha3_512(self.salt + word.encode()).digest()
                 encrypted_word = rsa.encrypt(word.encode(), self.public_key)
@@ -52,7 +57,6 @@ class Repository:
     def get_all_words(self):
         if self.private_key is None:
             raise RuntimeError('To execute this method private key is needed')
-        # we need to do something with sessions, we should be sure that is one session per request (some di)
         session = self.Session()
 
         try:
@@ -65,3 +69,8 @@ class Repository:
             return 500, 'Internal error'
         except UnicodeDecodeError:
             return 500, 'Internal error'
+
+    @run_on_executor
+    def get_all_urls(self):
+        session = self.Session()
+        return list(session.query(Url).all())

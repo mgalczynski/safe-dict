@@ -8,8 +8,9 @@ from scrapper import Scrapper
 
 
 class MainHandler(tornado.web.RequestHandler):
-    def initialize(self, repository):
+    def initialize(self, repository, witai):
         self.repository = repository
+        self.witai = witai
 
     async def post(self):
         try:
@@ -22,12 +23,14 @@ class MainHandler(tornado.web.RequestHandler):
             return
         url = body.get('url')
 
-        result = await Scrapper().scape(url)
+        triple =  await Scrapper().scape(url)
 
-        # in case of errors, will be replaced with custom errors
-        if isinstance(result, tuple):
-            self.set_status(*result)
+        # in case of errors, will be definitely replaced with custom errors
+        if len(triple) == 2:
+            self.set_status(*triple)
             return
+
+        result, text, url = triple
 
         # in case of empty dict
         if not result:
@@ -44,4 +47,5 @@ class MainHandler(tornado.web.RequestHandler):
         # we assume that in occurrences is always positive (not zero)
 
         self.finish({'result': most_frequent})
-        await self.repository.save(url, result)
+        analysis = await self.witai.get_meaning(text)
+        await self.repository.save(url, result, analysis)

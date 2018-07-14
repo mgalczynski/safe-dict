@@ -47,4 +47,4 @@ class Scrapper:
         for match in self.regex.finditer(text):
             matches[match.group(0).capitalize()] += 1
 
-        return matches
+        return matches, text, response.effective_url
